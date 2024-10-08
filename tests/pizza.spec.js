@@ -1,5 +1,9 @@
 import { test, expect } from "playwright-test-coverage";
 
+function randomName() {
+  return Math.random().toString(36).substring(2, 12);
+}
+
 test("home page", async ({ page }) => {
   await page.goto("/");
 
@@ -105,4 +109,45 @@ test("purchase with login", async ({ page }) => {
 
   // Check balance
   await expect(page.getByText("0.008")).toBeVisible();
+});
+
+test("login, create and delete franchise", async ({ page }) => {
+  await page.goto("http://localhost:5173/");
+  await page.getByRole("link", { name: "Login" }).click();
+  await page.getByPlaceholder("Email address").click();
+  await page.getByPlaceholder("Email address").fill("a@jwt.com");
+  await page.getByPlaceholder("Password").click();
+  await page.getByPlaceholder("Password").fill("admin");
+  await page.getByRole("button", { name: "Login" }).click();
+  await page.getByRole("link", { name: "Admin" }).click();
+  await page.getByRole("button", { name: "Add Franchise" }).click();
+  await page.getByPlaceholder("franchise name").click();
+  let franchiseName = randomName();
+  await page.getByPlaceholder("franchise name").fill(franchiseName);
+  await page.getByPlaceholder("franchisee admin email").click();
+  await page.getByPlaceholder("franchisee admin email").fill("a@jwt.com");
+  await page.getByRole("button", { name: "Create" }).click();
+  await page
+    .getByRole("row", { name: `${franchiseName} 常用名字 Close` })
+    .getByRole("button")
+    .click();
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByText(`${franchiseName} 常用名字`)).not.toBeVisible();
+  await page.getByRole("link", { name: "Logout" }).click();
+
+  // Updated assertion to be more specific
+  await expect(page.getByText("The web's best pizza", { exact: true })).toBeVisible();
+});
+
+test("register", async ({ page }) => {
+  await page.goto("http://localhost:5173/");
+  await page.getByRole("link", { name: "Register" }).click();
+  await page.getByPlaceholder("Full name").click();
+  await page.getByPlaceholder("Full name").fill(randomName());
+  await page.getByPlaceholder("Email address").click();
+  await page.getByPlaceholder("Email address").fill(`${randomName()}@test.com`);
+  await page.getByPlaceholder("Password").click();
+  await page.getByPlaceholder("Password").fill(randomName());
+  await page.getByRole("button", { name: "Register" }).click();
+  await expect(page.getByText("Pizza is an absolute delight"), { exact: true }).toBeVisible();
 });
