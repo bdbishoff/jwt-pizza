@@ -26,10 +26,22 @@ jobs:
           version=$(date +'%Y%m%d.%H%M%S')
           echo "version=$version" >> "$GITHUB_OUTPUT"
           printf '{"version": "%s" }' "$version" > public/version.json
+
+      - name: Build
+        run: |
+          npm ci && npm run build
+          cp dist/index.html dist/404.html
+
+      - name: Update pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
       - name: Run tests
         run: |
           npx playwright install --with-deps chromium
           npm run test:coverage
+
       - name: Update coverage
         run: |
           coverage_pct=$(grep -o '"pct":[0-9.]*' coverage/coverage-summary.json | head -n 1 | cut -d ':' -f 2)
@@ -40,14 +52,6 @@ jobs:
           git add .
           git commit -m "generated"
           git push
-      - name: Build
-        run: |
-          npm ci && npm run build
-          cp dist/index.html dist/404.html
-      - name: Update pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: dist/
 
   deploy:
     needs: build
