@@ -151,3 +151,51 @@ test("register", async ({ page }) => {
   await page.getByRole("button", { name: "Register" }).click();
   await expect(page.getByText("Pizza is an absolute delight"), { exact: true }).toBeVisible();
 });
+
+test("login franchise, create store, delete store", async ({ page }) => {
+  await page.goto("http://localhost:5173/");
+  await page.getByRole("link", { name: "Login" }).click();
+  await page.getByPlaceholder("Email address").fill("f@jwt.com");
+  await page.getByPlaceholder("Password").click();
+  await page.getByPlaceholder("Password").fill("franchisee");
+  await page.getByRole("button", { name: "Login" }).click();
+  await page.getByLabel("Global").getByRole("link", { name: "Franchise" }).click();
+  await page.getByLabel("Global").getByRole("link", { name: "Franchise" }).click();
+  await page.getByLabel("Global").getByRole("link", { name: "Franchise" }).click();
+  await page.getByRole("button", { name: "Create store" }).click();
+  await page.getByPlaceholder("store name").click();
+  await page.getByPlaceholder("store name").fill("randomname");
+  await page.getByRole("button", { name: "Create" }).click();
+  await page.getByRole("row", { name: "randomname 0 ₿ Close" }).getByRole("button").click();
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.getByText("randomname 0 ₿")).not.toBeVisible();
+});
+
+test("order and order history", async ({ page }) => {
+  await page.goto("http://localhost:5173/");
+  await page.getByRole("link", { name: "Login" }).click();
+  await page.getByPlaceholder("Email address").fill("d@jwt.com");
+  await page.getByPlaceholder("Password").click();
+  await page.getByPlaceholder("Password").fill("a");
+  await page.getByRole("button", { name: "Login" }).click();
+  await page.getByRole("link", { name: "Order" }).click();
+  await page.getByRole("link", { name: "Order" }).click();
+  await page.getByRole("link", { name: "Order" }).click();
+  await page.getByRole("combobox").selectOption("2");
+  await page.getByRole("link", { name: "Image Description Veggie A" }).click();
+  await page.getByRole("link", { name: "Image Description Veggie A" }).click();
+  await page.getByRole("button", { name: "Checkout" }).click();
+  await page.getByRole("button", { name: "Pay now" }).click();
+  await expect(page.locator("main")).toContainText("total: 0.008 ₿");
+
+  await page.getByRole("link", { name: "KC" }).click();
+  await expect(page.locator("main")).toContainText("0.008 ₿");
+});
+
+test("docs", async ({ page }) => {
+  await page.goto("http://localhost:5173/docs");
+  await expect(page.locator("main")).toContainText("[POST] /api/auth");
+  await expect(page.locator("main")).toContainText(
+    'curl -X POST localhost:3000/api/auth -d \'{"name":"pizza diner", "email":"d@jwt.'
+  );
+});
